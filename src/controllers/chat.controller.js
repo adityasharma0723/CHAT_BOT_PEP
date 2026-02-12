@@ -53,5 +53,22 @@ exports.getMessages = asyncHandler(async (req, res) => {
         .limit(Number(limit));
 
     res.json(messages);
+});
 
+// Get thread + messages between two users
+exports.getThread = asyncHandler(async (req, res) => {
+    const { senderId, receiverId } = req.params;
+
+    const thread = await Thread.findOne({
+        participants: { $all: [senderId, receiverId] }
+    });
+
+    if (!thread) {
+        return res.json({ thread: null, messages: [] });
+    }
+
+    const messages = await Chat.find({ thread: thread._id })
+        .sort({ createdAt: 1 });
+
+    res.json({ thread, messages });
 });
